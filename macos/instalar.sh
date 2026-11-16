@@ -14,7 +14,7 @@ rm -rf ./Coruja.app ./Coruja.iconset ./icon_1024.png
 mkdir -p ./Coruja.app/Contents/MacOS ./Coruja.app/Contents/Resources
 
 echo "Compilando a coruja..."
-swiftc -O -swift-version 5 main.swift -o ./Coruja.app/Contents/MacOS/Coruja -framework AppKit -framework IOKit
+swiftc -O -swift-version 5 *.swift -o ./Coruja.app/Contents/MacOS/Coruja -framework AppKit -framework IOKit
 cp Info.plist ./Coruja.app/Contents/Info.plist
 
 echo "Desenhando o ícone..."
