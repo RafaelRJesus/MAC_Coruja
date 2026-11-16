@@ -12,7 +12,7 @@ final class OwlView: NSView {
     var rightEarRect: NSRect { Owl.rightEarArea(in: bounds) }
 
     override func draw(_ dirtyRect: NSRect) {
-        Owl.draw(in: bounds, eyesOpen: eyesOpen && !blinking, gem: gem)
+        Owl.draw(in: bounds, pose: (eyesOpen && !blinking) ? .awake : .asleep, gem: gem)
     }
 
     override var mouseDownCanMoveWindow: Bool { false }
