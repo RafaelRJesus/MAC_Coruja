@@ -180,6 +180,58 @@ final class KeepAwake {
     }
 }
 
+// MARK: - Configurações (salvas entre aberturas do app)
+
+enum LimitMode: Int {
+    case none = 0      // fica acordada até eu fechar os olhos
+    case timer = 1     // contagem regressiva
+    case clock = 2     // horário fixo
+}
+
+enum Settings {
+    private static let d = UserDefaults.standard
+
+    static var mode: LimitMode {
+        get { LimitMode(rawValue: d.integer(forKey: "mode")) ?? .none }
+        set { d.set(newValue.rawValue, forKey: "mode") }
+    }
+
+    /// Duração do temporizador, em minutos (padrão: 1 h).
+    static var timerMinutes: Int {
+        get { let v = d.integer(forKey: "timerMinutes"); return v > 0 ? v : 60 }
+        set { d.set(max(1, newValue), forKey: "timerMinutes") }
+    }
+
+    /// Horário para dormir, em minutos desde a meia-noite (padrão: 18:00).
+    static var clockMinutes: Int {
+        get { d.object(forKey: "clockMinutes") as? Int ?? 18 * 60 }
+        set { d.set(newValue, forKey: "clockMinutes") }
+    }
+
+    /// Calcula quando a coruja deve dormir a partir de agora (nil = sem limite).
+    static func deadline(from now: Date = Date()) -> Date? {
+        switch mode {
+        case .none:
+            return nil
+        case .timer:
+            return now.addingTimeInterval(TimeInterval(timerMinutes * 60))
+        case .clock:
+            let cal = Calendar.current
+            var comps = cal.dateComponents([.year, .month, .day], from: now)
+            comps.hour = clockMinutes / 60
+            comps.minute = clockMinutes % 60
+            guard let today = cal.date(from: comps) else { return nil }
+            // Se o horário de hoje já passou, vale para amanhã
+            return today > now ? today : cal.date(byAdding: .day, value: 1, to: today)
+        }
+    }
+}
+
+func formatRemaining(_ seconds: TimeInterval) -> String {
+    let s = max(0, Int(seconds.rounded(.up)))
+    return String(format: "%02d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60)
+}
+
 // MARK: - View da coruja
 
 final class OwlView: NSView {
@@ -218,6 +270,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let owl = OwlView(frame: NSRect(x: 0, y: 0, width: 160, height: 160))
     let keeper = KeepAwake()
     var blinkTimer: Timer?
+    var tickTimer: Timer?
+    var deadline: Date?
     let toggleItem = NSMenuItem(title: "Acordar a coruja", action: #selector(toggle), keyEquivalent: "")
     let onTopItem = NSMenuItem(title: "Sempre na frente", action: #selector(toggleOnTop), keyEquivalent: "")
 
@@ -267,18 +321,61 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func toggle() {
-        if keeper.active {
-            keeper.stop()
-            owl.eyesOpen = false
-            blinkTimer?.invalidate()
-            toggleItem.title = "Acordar a coruja"
-        } else {
+        keeper.active ? sleepOwl() : wakeOwl()
+    }
+
+    /// Abre os olhos e, se houver limite configurado, começa a contar.
+    func wakeOwl() {
+        if !keeper.active {
             askAccessibilityIfNeeded()
             keeper.start()
             owl.eyesOpen = true
             toggleItem.title = "Pôr a coruja para dormir"
             scheduleBlink()
         }
+        deadline = Settings.deadline()
+        startTick()
+    }
+
+    /// Fecha os olhos e devolve o Mac ao comportamento normal.
+    func sleepOwl() {
+        keeper.stop()
+        owl.eyesOpen = false
+        blinkTimer?.invalidate()
+        toggleItem.title = "Acordar a coruja"
+        deadline = nil
+        tickTimer?.invalidate()
+        tickTimer = nil
+        updateStatus()
+    }
+
+    // Relógio de 1 em 1 segundo: confere o limite e atualiza o texto de status
+    func startTick() {
+        tickTimer?.invalidate()
+        tickTimer = nil
+        updateStatus()
+        guard deadline != nil else { return }
+        tickTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            guard let self = self, let d = self.deadline else { return }
+            if Date() >= d {
+                self.sleepOwl()
+            } else {
+                self.updateStatus()
+            }
+        }
+    }
+
+    /// Texto que descreve o estado atual (usado na dica do mouse e no painel).
+    var statusText: String {
+        guard keeper.active else { return "Dormindo" }
+        guard let d = deadline else { return "Acordada, sem limite" }
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm"
+        return "Dorme em \(formatRemaining(d.timeIntervalSinceNow)) (às \(f.string(from: d)))"
+    }
+
+    func updateStatus() {
+        owl.toolTip = statusText
     }
 
     @objc func toggleOnTop() {
