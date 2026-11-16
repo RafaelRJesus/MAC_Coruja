@@ -114,10 +114,10 @@ enum Effects {
 
     // MARK: Sol (nasce atrás da coruja e se põe atrás dela)
 
-    /// progress: 0 = escondido atrás da coruja, 1 = alto, à esquerda.
+    /// progress: 0 = no horizonte (pés da coruja), 1 = alto. Fica do lado esquerdo dela.
     static func drawSun(g: Geo, progress: CGFloat, spin: CGFloat) {
         let p = max(0, min(1, progress))
-        let center = g.P(0.62 - 0.50 * p, 0.25 + 0.60 * p)
+        let center = g.P(0.04, 0.10 + 0.72 * p)
         let r = 0.11 * g.s
         // cor vai do laranja (horizonte) para o amarelo (alto)
         let color = NSColor(calibratedRed: 1, green: 0.55 + 0.35 * p, blue: 0.15 + 0.2 * p, alpha: 1)
