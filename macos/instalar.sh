@@ -32,9 +32,15 @@ codesign --force --deep -s - ./Coruja.app >/dev/null 2>&1 || true
 
 DEST="/Applications"
 [ -w "$DEST" ] || { DEST="$HOME/Applications"; mkdir -p "$DEST"; }
+osascript -e 'quit app "Coruja"' >/dev/null 2>&1 || true
 rm -rf "${DEST:?}/Coruja.app"
 cp -R ./Coruja.app "$DEST/"
 rm -rf ./Coruja.app
 
+# Cada compilação tem uma assinatura nova, e a permissão de Acessibilidade
+# antiga deixa de valer. Limpa a entrada velha para o macOS pedir só uma vez.
+tccutil reset Accessibility com.rafael.coruja >/dev/null 2>&1 || true
+
 echo "Pronto! Coruja instalada em $DEST"
+echo "Na primeira vez que acordar a coruja, ative a permissão de Acessibilidade."
 open "$DEST/Coruja.app"
