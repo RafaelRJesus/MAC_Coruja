@@ -38,9 +38,33 @@ enum Owl {
         return [g.R(0.21, 0.45, 0.30, 0.30), g.R(0.49, 0.45, 0.30, 0.30)]
     }
 
-    /// Área clicável da orelha direita (tufo do lado direito da tela).
+    /// Área clicável da orelha direita (tufo do lado direito da tela + o brinco).
     static func rightEarArea(in r: NSRect) -> NSRect {
-        Geo(r).R(0.56, 0.76, 0.28, 0.19)
+        let g = Geo(r)
+        return g.R(0.56, 0.76, 0.28, 0.19).union(g.R(0.75, 0.70, 0.11, 0.14))
+    }
+
+    /// Brinco na orelha direita: argolinha dourada com uma pedra redonda pendurada.
+    /// A cor da pedra identifica a configuração ativa.
+    static func drawEarring(_ g: Geo, gem: NSColor) {
+        let gold = NSColor(calibratedRed: 0.95, green: 0.78, blue: 0.25, alpha: 1)
+
+        // argola presa na ponta do tufo
+        let ring = oval(NSRect(x: g.P(0.765, 0.785).x, y: g.P(0.765, 0.785).y,
+                               width: 0.045 * g.s, height: 0.045 * g.s))
+        ring.lineWidth = 0.012 * g.s
+        gold.setStroke()
+        ring.stroke()
+
+        // pedra redonda com aro dourado e brilho
+        let ball = g.R(0.762, 0.715, 0.06, 0.06)
+        gold.setFill()
+        oval(ball.insetBy(dx: -0.008 * g.s, dy: -0.008 * g.s)).fill()
+        gem.setFill()
+        oval(ball).fill()
+        NSColor.white.withAlphaComponent(0.8).setFill()
+        oval(NSRect(x: ball.minX + ball.width * 0.22, y: ball.minY + ball.height * 0.55,
+                    width: ball.width * 0.28, height: ball.height * 0.28)).fill()
     }
 
     static func oval(_ r: NSRect) -> NSBezierPath { NSBezierPath(ovalIn: r) }
@@ -51,7 +75,7 @@ enum Owl {
         return p
     }
 
-    static func draw(in r: NSRect, eyesOpen: Bool) {
+    static func draw(in r: NSRect, eyesOpen: Bool, gem: NSColor = NSColor(calibratedRed: 0.95, green: 0.55, blue: 0.10, alpha: 1)) {
         let g = Geo(r)
 
         // tufos das orelhas
@@ -121,6 +145,9 @@ enum Owl {
         // bico
         beak.setFill()
         triangle(g.P(0.46, 0.47), g.P(0.54, 0.47), g.P(0.50, 0.37)).fill()
+
+        // brinco (por último, para ficar por cima do tufo)
+        drawEarring(g, gem: gem)
     }
 
     /// Ícone do app (fundo noturno arredondado + coruja de olhos abertos).
