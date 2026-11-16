@@ -8,7 +8,7 @@ Um amiguinho de mesa que mantém o computador acordado.
 Ela é pequena, fica num cantinho da tela e tem vida própria: respira, pisca, olha para o
 mouse, passeia, toma café, almoça e dorme no ninho.
 
-> Também existe para [Windows](https://github.com/RafaelRJesus/coruja-windows) e [Linux](https://github.com/RafaelRJesus/coruja-linux).
+> Também existe para [Windows](https://github.com/RafaelRJesus/Windows_Coruja) e [Linux](https://github.com/RafaelRJesus/Linux_Coruja).
 
 ## Como usar
 
@@ -82,5 +82,5 @@ Na primeira vez que a coruja acordar, o macOS pede permissão de **Acessibilidad
 
 ### Windows e Linux
 
-- **Windows**: [coruja-windows](https://github.com/RafaelRJesus/coruja-windows) (baixe o `Coruja.exe` em Releases)
-- **Linux**: [coruja-linux](https://github.com/RafaelRJesus/coruja-linux)
+- **Windows**: [Windows_Coruja](https://github.com/RafaelRJesus/Windows_Coruja) (baixe o `Coruja.exe` em Releases)
+- **Linux**: [Linux_Coruja](https://github.com/RafaelRJesus/Linux_Coruja)
