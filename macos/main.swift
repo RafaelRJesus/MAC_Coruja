@@ -550,7 +550,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private var askedAccessibility = false
+
+    /// Pede a permissão só se ainda não tiver e no máximo uma vez por abertura do app.
     func askAccessibilityIfNeeded() {
+        guard !AXIsProcessTrusted(), !askedAccessibility else { return }
+        askedAccessibility = true
         let opts = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(opts)
     }
