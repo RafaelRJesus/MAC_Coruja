@@ -218,6 +218,15 @@ enum LimitMode: Int {
     case none = 0      // fica acordada até eu fechar os olhos
     case timer = 1     // contagem regressiva
     case clock = 2     // horário fixo
+
+    /// Cor da pedra do brinco para cada configuração.
+    var gemColor: NSColor {
+        switch self {
+        case .none:  return NSColor(calibratedRed: 0.95, green: 0.55, blue: 0.10, alpha: 1) // laranja
+        case .timer: return NSColor(calibratedRed: 0.25, green: 0.55, blue: 0.95, alpha: 1) // azul
+        case .clock: return NSColor(calibratedRed: 0.20, green: 0.75, blue: 0.45, alpha: 1) // verde
+        }
+    }
 }
 
 enum Settings {
@@ -269,13 +278,14 @@ func formatRemaining(_ seconds: TimeInterval) -> String {
 final class OwlView: NSView {
     var eyesOpen = false { didSet { needsDisplay = true } }
     var blinking = false { didSet { needsDisplay = true } }
+    var gem: NSColor = LimitMode.none.gemColor { didSet { needsDisplay = true } }
     var onToggle: (() -> Void)?
     var onRightEar: ((NSRect) -> Void)?
 
     var rightEarRect: NSRect { Owl.rightEarArea(in: bounds) }
 
     override func draw(_ dirtyRect: NSRect) {
-        Owl.draw(in: bounds, eyesOpen: eyesOpen && !blinking)
+        Owl.draw(in: bounds, eyesOpen: eyesOpen && !blinking, gem: gem)
     }
 
     override var mouseDownCanMoveWindow: Bool { false }
@@ -384,6 +394,7 @@ final class SettingsViewController: NSViewController {
 
     @objc private func modeChanged() {
         Settings.mode = LimitMode(rawValue: modeControl.selectedSegment) ?? .none
+        app?.owl.gem = Settings.mode.gemColor
         refresh()
     }
 
@@ -445,6 +456,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.setFrameAutosaveName("CorujaJanela")
         window.makeKeyAndOrderFront(nil)
 
+        owl.gem = Settings.mode.gemColor
         owl.onToggle = { [weak self] in self?.toggle() }
         owl.onRightEar = { [weak self] rect in self?.showSettings(from: rect) }
 
