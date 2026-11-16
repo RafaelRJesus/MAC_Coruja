@@ -38,6 +38,11 @@ enum Owl {
         return [g.R(0.21, 0.45, 0.30, 0.30), g.R(0.49, 0.45, 0.30, 0.30)]
     }
 
+    /// Área clicável da orelha direita (tufo do lado direito da tela).
+    static func rightEarArea(in r: NSRect) -> NSRect {
+        Geo(r).R(0.56, 0.76, 0.28, 0.19)
+    }
+
     static func oval(_ r: NSRect) -> NSBezierPath { NSBezierPath(ovalIn: r) }
 
     static func triangle(_ a: NSPoint, _ b: NSPoint, _ c: NSPoint) -> NSBezierPath {
@@ -238,6 +243,9 @@ final class OwlView: NSView {
     var eyesOpen = false { didSet { needsDisplay = true } }
     var blinking = false { didSet { needsDisplay = true } }
     var onToggle: (() -> Void)?
+    var onRightEar: ((NSRect) -> Void)?
+
+    var rightEarRect: NSRect { Owl.rightEarArea(in: bounds) }
 
     override func draw(_ dirtyRect: NSRect) {
         Owl.draw(in: bounds, eyesOpen: eyesOpen && !blinking)
@@ -247,7 +255,9 @@ final class OwlView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
-        if Owl.eyeAreas(in: bounds).contains(where: { $0.contains(p) }) {
+        if rightEarRect.contains(p) {
+            onRightEar?(rightEarRect)
+        } else if Owl.eyeAreas(in: bounds).contains(where: { $0.contains(p) }) {
             onToggle?()
         } else {
             window?.performDrag(with: event)   // arrastar a coruja pela tela
@@ -256,6 +266,7 @@ final class OwlView: NSView {
 
     override func resetCursorRects() {
         for e in Owl.eyeAreas(in: bounds) { addCursorRect(e, cursor: .pointingHand) }
+        addCursorRect(rightEarRect, cursor: .pointingHand)
     }
 }
 
